@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureShare | Blockchain-Inspired File Integrity Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B1220;
+    --surface: #101A2E;
+    --surface-2: #17233D;
+    --border: #263353;
+    --text: #E8EDF5;
+    --text-dim: #8C9BC2;
+    --accent: #4FD1C5;
+    --accent-soft: rgba(79,209,197,0.12);
+    --accent-2: #F0B429;
+    --accent-2-soft: rgba(240,180,41,0.12);
+    --danger: #F2545B;
+    --danger-soft: rgba(242,84,91,0.12);
+    --radius: 10px;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(79,209,197,0.08), transparent 60%),
+      radial-gradient(700px 400px at 0% 0%, rgba(240,180,41,0.05), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.5;
+  }
+
+  ::selection{ background: var(--accent); color: #06141A; }
+
+  a{ color: var(--accent); }
+
+  .wrap{
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+
+  /* ---------- Header ---------- */
+  header.top{
+    padding: 26px 0 0;
+  }
+  .header-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .account-area{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .account-mobile{
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--text-dim);
+    padding: 8px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.01em;
+  }
+  .brand .mark{
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: linear-gradient(145deg, var(--accent), #2E9C93);
+    display:flex; align-items:center; justify-content:center;
+    color: #06141A;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .brand .dim{ color: var(--text-dim); font-weight: 500; }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding: 64px 0 44px;
+    border-bottom: 1px solid var(--border);
+  }
+  .eyebrow{
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .eyebrow .dot{
+    width:6px; height:6px; border-radius:50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ opacity: 1; }
+    50%{ opacity: .35; }
+  }
+  h1{
+    font-family: var(--font-display);
+    font-size: clamp(32px, 4.4vw, 50px);
+    line-height: 1.08;
+    margin: 0 0 18px;
+    letter-spacing: -0.01em;
+    max-width: 15ch;
+  }
+  h1 .accent{ color: var(--accent); }
+  .hero p.lede{
+    color: var(--text-dim);
+    font-size: 16.5px;
+    max-width: 54ch;
+    margin: 0 0 30px;
+  }
+
+  .fingerprint{
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    max-width: 620px;
+  }
+  .fingerprint span{ color: var(--accent); }
+  .fingerprint::after{
+    content:"";
+    position:absolute; top:0; right:0; bottom:0; width:60px;
+    background: linear-gradient(90deg, transparent, var(--surface));
+  }
+
+  /* ---------- Section shell ---------- */
+  section{ padding: 46px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type{ border-bottom: none; }
+  .section-head{
+    display:flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .section-head h2{
+    font-family: var(--font-display);
+    font-size: 21px;
+    margin: 0;
+  }
+  @keyframes float{
+    0%, 100%{ transform: translateY(0) rotate(0deg); }
+    50%{ transform: translateY(-3px) rotate(-4deg); }
+  }
+  .section-head .hint{
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .grid-2{
+    display:grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 22px;
+    align-items: start;
+  }
+  @media (max-width: 760px){ .grid-2{ grid-template-columns: 1fr; } }
+  .stack{
+    display:flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .panel{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+  }
+
+  /* ---------- Dropzone ---------- */
+  .dropzone{
+    position: relative;
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 34px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .dropzone:hover, .dropzone.drag{
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .dropzone .icon{
+    width: 40px; height: 40px;
+    margin: 0 auto 12px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    display:flex; align-items:center; justify-content:center;
+    color: var(--accent);
+  }
+  .dropzone .title{ font-weight: 600; margin-bottom: 4px; }
+  .dropzone .sub{ font-size: 13px; color: var(--text-dim); }
+  input[type="file"]{ display:none; }
+
+  .dropzone-success{
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    border-radius: var(--radius);
+    opacity: 0;
+    transition: opacity .25s ease;
+  }
+  .dropzone-success.show{ display: flex; opacity: 1; }
+  .dropzone-success img{
+    max-height: 84px;
+    border-radius: 10px;
+  }
+
+  .file-chosen{
+    display:none;
+    align-items:center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-family: var(--font-mono);
+  }
+  .file-chosen.show{ display:flex; }
+  .file-chosen .name{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  button{
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 8px;
+    border: none;
+    padding: 11px 18px;
+    cursor: pointer;
+    transition: transform .1s ease, opacity .15s ease;
+  }
+  button:active{ transform: scale(0.98); }
+  button:disabled{ opacity: .5; cursor: not-allowed; }
+  .btn-primary{ background: var(--accent); color: #06141A; }
+  .btn-primary:hover:not(:disabled){ opacity: .9; }
+  .btn-ghost{
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover{ border-color: var(--accent); color: var(--accent); }
+  .btn-block{ width: 100%; margin-top: 16px; }
+  .btn-small{ padding: 7px 12px; font-size: 12.5px; }
+
+  /* ---------- Verify panel ---------- */
+  label.field-label{
+    display:block;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    font-family: var(--font-mono);
+  }
+  .input-row{ display:flex; gap: 8px; }
+  input[type="text"]{
+    flex:1;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 11px 12px;
+    border-radius: 8px;
+    outline: none;
+  }
+  input[type="text"]:focus{ border-color: var(--accent); }
+
+  .verify-result{
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    display:none;
+  }
+  .verify-result.show{ display:block; }
+  .verify-result.ok{ background: var(--accent-soft); border: 1px solid rgba(79,209,197,0.35); }
+  .verify-result.bad{ background: var(--danger-soft); border: 1px solid rgba(242,84,91,0.35); }
+  .verify-result .row{ display:flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+  .verify-result .k{ color: var(--text-dim); }
+  .verify-result .v{ font-family: var(--font-mono); text-align:right; word-break: break-all; }
+
+  /* ---------- Ledger ---------- */
+  .chain{
+    display:flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .block{
+    position: relative;
+    display:grid;
+    grid-template-columns: 44px 1fr auto;
+    align-items:center;
+    gap: 16px;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .block + .block{ margin-top: 14px; }
+  .block + .block::before{
+    content:"";
+    position:absolute;
+    top: -14px; left: 21px;
+    width: 2px; height: 14px;
+    background: repeating-linear-gradient(180deg, var(--border) 0 4px, transparent 4px 8px);
+  }
+  .block .idx{
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 50%;
+    width: 36px; height: 36px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .block .meta .fname{
+    font-weight: 600;
+    font-size: 14.5px;
+    margin-bottom: 4px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    max-width: 46ch;
+  }
+  .block .meta .hash{
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .block .meta .sub{
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .block .actions{
+    display:flex; gap: 8px;
+  }
+
+  .empty{
+    text-align:center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+    font-size: 14px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+  }
+
+  .status-line{
+    font-size: 13px;
+    margin-top: 12px;
+    display:none;
+    font-family: var(--font-mono);
+  }
+  .status-line.show{ display:block; }
+  .status-line.ok{ color: var(--accent); }
+  .status-line.bad{ color: var(--danger); }
+
+  .reaction-img{
+    display: none;
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 14px;
+    margin-top: 14px;
+    border: 1px solid var(--border);
+    animation: popIn .25s ease;
+  }
+  .reaction-img.show{ display: block; }
+  @keyframes popIn{
+    0%{ transform: scale(0.7); opacity: 0; }
+    100%{ transform: scale(1); opacity: 1; }
+  }
+
+  footer{
+    padding: 34px 0 50px;
+    color: var(--text-dim);
+    font-size: 12.5px;
+    text-align:center;
+  }
+
+  /* ---------- Auth modals ---------- */
+  .modal-overlay{
+    position: fixed;
+    inset: 0;
+    z-index: 950;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5,9,16,0.72);
+    padding: 20px;
+  }
+  .modal-overlay.show{ display: flex; }
+  .modal{
+    width: 100%;
+    max-width: 380px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+  .modal-tabs{
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .modal-tab{
+    flex: 1;
+    padding: 9px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .modal-tab.active{
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: rgba(79,209,197,0.35);
+  }
+  .modal input[type="text"], .modal input[type="password"]{
+    width: 100%;
+    margin-top: 6px;
+  }
+  .modal-error{
+    font-size: 12.5px;
+    color: var(--danger);
+    margin-bottom: 10px;
+    display: none;
+  }
+  .modal-error.show{ display: block; }
+  .modal-hint{
+    font-size: 13px;
+    color: var(--text-dim);
+    margin: 0 0 16px;
+  }
+
+  /* ---------- Splash screen ---------- */
+  .splash{
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(79,209,197,0.10), transparent 60%),
+      radial-gradient(700px 400px at 0% 0%, rgba(240,180,41,0.06), transparent 55%),
+      var(--bg);
+    opacity: 1;
+    transition: opacity 0.6s ease;
+  }
+  .splash.fade-out{ opacity: 0; pointer-events: none; }
+  .splash-inner{ text-align: center; }
+  .splash-logo{
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .splash-logo .mark{
+    width: 40px; height: 40px;
+    font-size: 19px;
+    border-radius: 11px;
+    background: linear-gradient(145deg, var(--accent), #2E9C93);
+    display:flex; align-items:center; justify-content:center;
+    color: #06141A;
+  }
+  .splash-tagline{
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 26px;
+  }
+  .splash-credit{
+    font-size: 12.5px;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    display: inline-block;
+  }
+  .footer-note{
+    margin-bottom: 18px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--text);
+    letter-spacing: 0.01em;
+  }
+  .footer-contact{
+    display:inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .footer-contact-title{
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--text);
+    font-size: 13.5px;
+    margin-bottom: 6px;
+  }
+  .footer-contact-row{ font-size: 12.5px; }
+  .footer-contact-row a{ color: var(--accent); text-decoration: none; }
+  .footer-contact-row a:hover{ text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div id="splashScreen" class="splash">
+  <div class="splash-inner">
+    <div class="splash-logo"><span class="mark">S</span>SecureShare</div>
+    <div class="splash-tagline">Blockchain-Inspired File Integrity Ledger</div>
+    <div class="splash-credit">Created by Group No - 004</div>
+  </div>
+</div>
+
+<header class="top">
+  <div class="wrap header-row">
+    <div class="brand"><span class="mark">S</span>SecureShare <span class="dim">/ file integrity ledger</span></div>
+    <div class="account-area" id="accountArea"></div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow"><span class="dot"></span>SHA-256 fingerprinting, live</div>
+    <h1>Every file, sealed <span class="accent">and provable.</span></h1>
+    <p class="lede">Upload any file to generate a verifiable SHA-256 fingerprint that can be checked or downloaded by anyone who has it.</p>
+    <div class="fingerprint" id="fingerprintTicker">e3b0c44298fc1c14... <span>awaiting first upload</span></div>
+  </div>
+</section>
+
+<section id="upload-section">
+  <div class="wrap grid-2">
+    <div class="panel">
+      <div class="section-head" style="margin-bottom:16px;">
+        <h2>Upload a File</h2>
+      </div>
+      <div class="dropzone" id="dropzone">
+        <div class="icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 21h14"/></svg>
+        </div>
+        <div class="title">Drop it right here</div>
+        <div class="sub">It never leaves your control unhashed — fingerprinting happens on upload</div>
+        <input type="file" id="fileInput">
+      </div>
+      <div class="file-chosen" id="fileChosen">
+        <span class="name" id="fileChosenName"></span>
+      </div>
+      <button class="btn-primary btn-block" id="uploadBtn" disabled>Upload File</button>
+      <div class="status-line" id="uploadStatus"></div>
+    </div>
+
+    <div class="stack">
+      <div class="panel">
+        <div class="section-head" style="margin-bottom:16px;">
+          <h2>Verify a File</h2>
+        </div>
+        <label class="field-label" for="verifyInput">SHA-256 HASH</label>
+        <div class="input-row">
+          <input type="text" id="verifyInput" placeholder="Paste a SHA-256 hash to verify">
+          <button class="btn-ghost" id="verifyBtn">Verify</button>
+        </div>
+        <div class="verify-result" id="verifyResult"></div>
+      </div>
+
+      <div class="panel">
+        <div class="section-head" style="margin-bottom:16px;">
+          <h2>Download by hash</h2>
+        </div>
+        <label class="field-label" for="downloadInput">SHA-256 HASH</label>
+        <div class="input-row">
+          <input type="text" id="downloadInput" placeholder="Enter a SHA-256 hash to download the file">
+          <button class="btn-primary" id="downloadBtn">Download</button>
+        </div>
+        <div class="status-line" id="downloadStatus"></div>
+              </div>
+    </div>
+  </div>
+</section>
+
+<section id="ledger-section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>The Ledger</h2>
+      <span class="hint" id="blockCount">0 blocks sealed</span>
+    </div>
+    <div class="chain" id="chain"></div>
+    <div class="empty" id="emptyState">No files sealed yet — the first upload starts the chain.</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-note">This project demonstrates blockchain-inspired file integrity verification using SHA-256 hashing.</div>
+    <div class="footer-contact">
+      <div class="footer-contact-title">Developed by</div>
+      <div class="footer-contact-row">Mohd Hashir (241013106104) — <a href="mailto:mohdhashir52@gmail.com">mohdhashir52@gmail.com</a></div>
+      <div class="footer-contact-row">Md Anas (241013106101) — <a href="mailto:mohdanas4095@gmail.com">mohdanas4095@gmail.com</a></div>
+      <div class="footer-contact-row">Naman Nain (241013106107) — <a href="mailto:namannain123@gmail.com">namannain123@gmail.com</a></div>
+      <div class="footer-contact-row">Krishna Gola (241013106085) — <a href="mailto:krishnagola2007@gmail.com">krishnagola2007@gmail.com</a></div>
+    </div>
+  </div>
+</footer>
+
+
+<div class="modal-overlay" id="authModalOverlay">
+  <div class="modal">
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tabLogin" type="button">Log in</button>
+      <button class="modal-tab" id="tabRegister" type="button">Sign up</button>
+    </div>
+    <div class="modal-error" id="authError"></div>
+    <label class="field-label" for="authMobile">Mobile number</label>
+    <input type="text" id="authMobile" inputmode="numeric" placeholder="10-digit mobile number">
+    <label class="field-label" for="authPassword" style="margin-top:12px;">Password</label>
+    <input type="password" id="authPassword" placeholder="At least 4 characters">
+    <button class="btn-primary btn-block" id="authSubmitBtn" style="margin-top:18px;">Log in</button>
+    <button class="btn-ghost btn-block" id="authCancelBtn" style="margin-top:10px;">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resetModalOverlay">
+  <div class="modal">
+    <div class="section-head" style="margin-bottom:12px;"><h2>Reset your account</h2></div>
+    <p class="modal-hint">This clears every file sealed under this account. Your mobile number and password stay exactly the same — just confirm your password to continue.</p>
+    <div class="modal-error" id="resetError"></div>
+    <label class="field-label" for="resetPassword">Password</label>
+    <input type="password" id="resetPassword" placeholder="Confirm your password">
+    <button class="btn-primary btn-block" id="resetConfirmBtn" style="margin-top:18px;">Reset my account</button>
+    <button class="btn-ghost btn-block" id="resetCancelBtn" style="margin-top:10px;">Cancel</button>
+  </div>
+</div>
+
+<script>
+const API = "";
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const fileChosen = document.getElementById('fileChosen');
+const fileChosenName = document.getElementById('fileChosenName');
+const uploadBtn = document.getElementById('uploadBtn');
+const uploadStatus = document.getElementById('uploadStatus');
+const chainEl = document.getElementById('chain');
+const emptyState = document.getElementById('emptyState');
+const blockCount = document.getElementById('blockCount');
+const fingerprintTicker = document.getElementById('fingerprintTicker');
+const downloadInput = document.getElementById('downloadInput');
+const downloadBtn = document.getElementById('downloadBtn');
+const downloadStatus = document.getElementById('downloadStatus');
+function playErrorSound(){
+  // Sound effects removed for the academic submission build.
+}
+function playVerifySuccessSound(){
+  // Sound effects removed for the academic submission build.
+}
+function playRegisterSuccessSound(){
+  // Sound effects removed for the academic submission build.
+}
+
+let selectedFile = null;
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  if (e.dataTransfer.files.length){
+    selectedFile = e.dataTransfer.files[0];
+    showChosen();
+  }
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length){
+    selectedFile = fileInput.files[0];
+    showChosen();
+  }
+});
+
+function showChosen(){
+  fileChosenName.textContent = `${selectedFile.name} · ${formatBytes(selectedFile.size)}`;
+  fileChosen.classList.add('show');
+  uploadBtn.disabled = false;
+}
+
+function formatBytes(bytes){
+  if (!bytes) return '0 B';
+  const units = ['B','KB','MB','GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${(bytes / Math.pow(1024, i)).toFixed(i ? 1 : 0)} ${units[i]}`;
+}
+
+function formatTime(iso){
+  if (!iso) return '';
+  const d = new Date(iso + (iso.endsWith('Z') ? '' : 'Z'));
+  return d.toLocaleString();
+}
+
+function setStatus(el, msg, ok){
+  el.textContent = msg;
+  el.classList.remove('ok','bad');
+  el.classList.add('show', ok ? 'ok' : 'bad');
+  if (!ok) playErrorSound();
+}
+
+uploadBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+  uploadBtn.disabled = true;
+  uploadBtn.textContent = 'Uploading…';
+  uploadStatus.classList.remove('show');
+
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+
+  try{
+    const res = await fetch(`${API}/upload/`, { method: 'POST', headers: authHeaders(), body: formData });
+    const data = await res.json();
+    if (!res.ok){
+      setStatus(uploadStatus, data.detail || 'Upload failed', false);
+    } else {
+      setStatus(uploadStatus, `Uploaded — hash ${data.block.hash.slice(0,16)}…`, true);
+      prependBlock(data.block, true);
+      updateTicker(data.block.hash);
+      selectedFile = null;
+      fileChosen.classList.remove('show');
+      fileInput.value = '';
+      uploadBtn.disabled = true;
+    }
+  } catch(err){
+    setStatus(uploadStatus, 'Network error — is the server running?', false);
+  } finally {
+    uploadBtn.textContent = 'Upload File';
+    if (!selectedFile) uploadBtn.disabled = true; else uploadBtn.disabled = false;
+  }
+});
+
+document.getElementById('verifyBtn').addEventListener('click', async () => {
+  const hash = document.getElementById('verifyInput').value.trim();
+  const resultEl = document.getElementById('verifyResult');
+  if (!hash){ return; }
+  resultEl.classList.remove('show','ok','bad');
+  try{
+    const res = await fetch(`${API}/verify/${encodeURIComponent(hash)}`);
+    const data = await res.json();
+    resultEl.classList.remove('ok','bad');
+    if (data.verified){
+      resultEl.innerHTML = `
+        <div class="row"><span class="k">Status</span><span class="v">Verified successfully</span></div>
+        <div class="row"><span class="k">Filename</span><span class="v">${escapeHtml(data.filename)}</span></div>
+        <div class="row"><span class="k">Size</span><span class="v">${formatBytes(data.filesize)}</span></div>
+        <div class="row"><span class="k">Sealed</span><span class="v">${formatTime(data.timestamp)}</span></div>
+      `;
+      resultEl.classList.add('show','ok');
+      playVerifySuccessSound();
+    } else {
+      resultEl.innerHTML = `<div class="row"><span class="k">Status</span><span class="v">No matching record found</span></div>`;
+      resultEl.classList.add('show','bad');
+      playErrorSound();
+    }
+  } catch(err){
+    resultEl.innerHTML = `<div class="row"><span class="k">Status</span><span class="v">Network error</span></div>`;
+    resultEl.classList.add('show','bad');
+    playErrorSound();
+  }
+});
+
+downloadBtn.addEventListener('click', async () => {
+  const hash = downloadInput.value.trim();
+  if (!hash) return;
+  downloadStatus.classList.remove('show');
+  try{
+    const res = await fetch(`${API}/verify/${encodeURIComponent(hash)}`);
+    const data = await res.json();
+    if (data.verified){
+      setStatus(downloadStatus, `Downloading ${data.filename}…`, true);
+      window.location.href = `${API}/download/${encodeURIComponent(hash)}`;
+    } else {
+      setStatus(downloadStatus, 'No file found for that hash', false);
+    }
+  } catch(err){
+    setStatus(downloadStatus, 'Network error — is the server running?', false);
+  }
+});
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str ?? '';
+  return d.innerHTML;
+}
+
+function blockNode(block, index){
+  const div = document.createElement('div');
+  div.className = 'block';
+  div.innerHTML = `
+    <div class="idx">${index}</div>
+    <div class="meta">
+      <div class="fname">${escapeHtml(block.filename)}</div>
+      <div class="hash">${block.hash}</div>
+      <div class="sub">${formatBytes(block.filesize)} · ${formatTime(block.timestamp)}</div>
+    </div>
+    <div class="actions">
+      <button class="btn-ghost btn-small" data-copy="${block.hash}">Copy hash</button>
+      <a href="${API}/download/${block.hash}"><button class="btn-primary btn-small">Download</button></a>
+    </div>
+  `;
+  div.querySelector('[data-copy]').addEventListener('click', (e) => {
+    navigator.clipboard.writeText(block.hash);
+    const btn = e.currentTarget;
+    const original = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = original, 1200);
+  });
+  return div;
+}
+
+function prependBlock(block, animate){
+  emptyState.style.display = 'none';
+  const node = blockNode(block, chainEl.children.length + 1);
+  chainEl.insertBefore(node, chainEl.firstChild);
+  renumber();
+  updateCount();
+}
+
+function renumber(){
+  [...chainEl.children].forEach((el, i) => {
+    el.querySelector('.idx').textContent = chainEl.children.length - i;
+  });
+}
+
+function updateCount(){
+  const n = chainEl.children.length;
+  blockCount.textContent = `${n} block${n === 1 ? '' : 's'} sealed`;
+}
+
+function updateTicker(hash){
+  fingerprintTicker.innerHTML = `${hash.slice(0,32)}… <span>sealed just now</span>`;
+}
+
+// Guests: this page starts empty on every load/refresh — it only shows files
+// sealed during the current visit, not the server's full history. The files
+// themselves are still safely stored: anyone with a hash can still verify or
+// download it directly, even after a refresh.
+// Logged-in accounts: their own sealed files persist and reload automatically —
+// that's the whole point of having an account here.
+
+let authToken = localStorage.getItem('n00dles_token');
+let currentUser = null;
+
+const accountArea = document.getElementById('accountArea');
+const authModalOverlay = document.getElementById('authModalOverlay');
+const resetModalOverlay = document.getElementById('resetModalOverlay');
+const tabLogin = document.getElementById('tabLogin');
+const tabRegister = document.getElementById('tabRegister');
+const authError = document.getElementById('authError');
+const authMobile = document.getElementById('authMobile');
+const authPassword = document.getElementById('authPassword');
+const authSubmitBtn = document.getElementById('authSubmitBtn');
+const authCancelBtn = document.getElementById('authCancelBtn');
+const resetError = document.getElementById('resetError');
+const resetPassword = document.getElementById('resetPassword');
+const resetConfirmBtn = document.getElementById('resetConfirmBtn');
+const resetCancelBtn = document.getElementById('resetCancelBtn');
+
+let authMode = 'login';
+
+function authHeaders(){
+  return authToken ? { 'Authorization': 'Bearer ' + authToken } : {};
+}
+
+function showGuestUI(){
+  accountArea.innerHTML = `<button class="btn-ghost btn-small" id="openAuthBtn">Log in / Sign up</button>`;
+  document.getElementById('openAuthBtn').addEventListener('click', () => openAuthModal('login'));
+  chainEl.innerHTML = '';
+  emptyState.textContent = 'No files sealed yet — the first upload starts the chain.';
+  emptyState.style.display = 'block';
+  updateCount();
+}
+
+function showLoggedInUI(){
+  accountArea.innerHTML = `
+    <span class="account-mobile">${escapeHtml(currentUser.mobile)}</span>
+    <button class="btn-ghost btn-small" id="resetAccountBtn">Reset</button>
+    <button class="btn-ghost btn-small" id="logoutBtn">Log out</button>
+  `;
+  document.getElementById('resetAccountBtn').addEventListener('click', openResetModal);
+  document.getElementById('logoutBtn').addEventListener('click', doLogout);
+}
+
+function openAuthModal(mode){
+  authMode = mode;
+  authError.classList.remove('show');
+  authMobile.value = '';
+  authPassword.value = '';
+  updateAuthTabs();
+  authModalOverlay.classList.add('show');
+}
+
+function closeAuthModal(){
+  authModalOverlay.classList.remove('show');
+}
+
+function updateAuthTabs(){
+  tabLogin.classList.toggle('active', authMode === 'login');
+  tabRegister.classList.toggle('active', authMode === 'register');
+  authSubmitBtn.textContent = authMode === 'login' ? 'Log in' : 'Sign up';
+  authPassword.placeholder = authMode === 'login' ? 'Your password' : 'At least 4 characters';
+}
+
+tabLogin.addEventListener('click', () => { authMode = 'login'; updateAuthTabs(); });
+tabRegister.addEventListener('click', () => { authMode = 'register'; updateAuthTabs(); });
+authCancelBtn.addEventListener('click', closeAuthModal);
+authModalOverlay.addEventListener('click', (e) => { if (e.target === authModalOverlay) closeAuthModal(); });
+
+authSubmitBtn.addEventListener('click', async () => {
+  const mobile = authMobile.value.trim();
+  const password = authPassword.value;
+  authError.classList.remove('show');
+
+  if (!mobile || !password){
+    authError.textContent = 'Enter both a mobile number and a password.';
+    authError.classList.add('show');
+    playErrorSound();
+    return;
+  }
+
+  const endpoint = authMode === 'login' ? '/auth/login' : '/auth/register';
+  authSubmitBtn.disabled = true;
+  try{
+    const res = await fetch(`${API}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mobile, password }),
+    });
+    const data = await res.json();
+    if (!res.ok){
+      authError.textContent = data.detail || 'Something went wrong.';
+      authError.classList.add('show');
+      playErrorSound();
+      return;
+    }
+    authToken = data.token;
+    localStorage.setItem('n00dles_token', authToken);
+    if (authMode === 'register'){
+      playRegisterSuccessSound();
+    }
+    closeAuthModal();
+    await checkAuth();
+  } catch(err){
+    authError.textContent = 'Network error — is the server running?';
+    authError.classList.add('show');
+    playErrorSound();
+  } finally {
+    authSubmitBtn.disabled = false;
+  }
+});
+
+async function doLogout(){
+  try{
+    await fetch(`${API}/auth/logout`, { method: 'POST', headers: authHeaders() });
+  } catch(err){ /* best effort */ }
+  localStorage.removeItem('n00dles_token');
+  authToken = null;
+  currentUser = null;
+  showGuestUI();
+}
+
+function openResetModal(){
+  resetError.classList.remove('show');
+  resetPassword.value = '';
+  resetModalOverlay.classList.add('show');
+}
+function closeResetModal(){
+  resetModalOverlay.classList.remove('show');
+}
+resetCancelBtn.addEventListener('click', closeResetModal);
+resetModalOverlay.addEventListener('click', (e) => { if (e.target === resetModalOverlay) closeResetModal(); });
+
+resetConfirmBtn.addEventListener('click', async () => {
+  const password = resetPassword.value;
+  resetError.classList.remove('show');
+  if (!password){
+    resetError.textContent = 'Enter your password to confirm.';
+    resetError.classList.add('show');
+    playErrorSound();
+    return;
+  }
+  resetConfirmBtn.disabled = true;
+  try{
+    const res = await fetch(`${API}/auth/reset`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json();
+    if (!res.ok){
+      resetError.textContent = data.detail || 'Could not reset your account.';
+      resetError.classList.add('show');
+      playErrorSound();
+      return;
+    }
+    closeResetModal();
+    await loadMyFiles();
+  } catch(err){
+    resetError.textContent = 'Network error — is the server running?';
+    resetError.classList.add('show');
+    playErrorSound();
+  } finally {
+    resetConfirmBtn.disabled = false;
+  }
+});
+
+async function loadMyFiles(){
+  try{
+    const res = await fetch(`${API}/my-files/`, { headers: authHeaders() });
+    const data = await res.json();
+    const items = (data.ledger || []).slice().reverse();
+    chainEl.innerHTML = '';
+    if (!items.length){
+      emptyState.textContent = 'No files sealed yet on this account — the first upload starts your chain.';
+      emptyState.style.display = 'block';
+    } else {
+      emptyState.style.display = 'none';
+      items.forEach((block, i) => chainEl.appendChild(blockNode(block, items.length - i)));
+      updateTicker(items[0].hash);
+    }
+    updateCount();
+  } catch(err){
+    emptyState.textContent = 'Could not load your files.';
+    emptyState.style.display = 'block';
+  }
+}
+
+async function checkAuth(){
+  if (!authToken){
+    showGuestUI();
+    return;
+  }
+  try{
+    const res = await fetch(`${API}/auth/me`, { headers: authHeaders() });
+    if (!res.ok) throw new Error('session invalid');
+    const data = await res.json();
+    currentUser = data;
+    showLoggedInUI();
+    await loadMyFiles();
+  } catch(err){
+    localStorage.removeItem('n00dles_token');
+    authToken = null;
+    showGuestUI();
+  }
+}
+
+checkAuth();
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const splash = document.getElementById('splashScreen');
+    splash.classList.add('fade-out');
+    setTimeout(() => { splash.style.display = 'none'; }, 650);
+  }, 1600);
+});
+</script>
+</body>
+</html>

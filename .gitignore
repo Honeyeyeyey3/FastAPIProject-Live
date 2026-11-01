@@ -1,0 +1,4 @@
+files.db
+storage/
+__pycache__/
+*.pyc
