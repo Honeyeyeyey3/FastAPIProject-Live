@@ -692,15 +692,30 @@ const fingerprintTicker = document.getElementById('fingerprintTicker');
 const downloadInput = document.getElementById('downloadInput');
 const downloadBtn = document.getElementById('downloadBtn');
 const downloadStatus = document.getElementById('downloadStatus');
-function playErrorSound(){
-  // Sound effects removed for the academic submission build.
+// ---------- Sound effects ----------
+// Each sound plays safely: if a browser blocks audio or a file is missing,
+// nothing breaks — the page simply stays quiet.
+function makeSound(src){
+  try { const a = new Audio(src); a.preload = 'auto'; return a; } catch (e) { return null; }
 }
-function playVerifySuccessSound(){
-  // Sound effects removed for the academic submission build.
+const SOUNDS = {
+  upload:   makeSound('sounds/upload.mp3'),
+  error:    makeSound('sounds/error.mp3'),
+  verify:   makeSound('sounds/verify-success.mp3'),
+  register: makeSound('sounds/register-success.mp3'),
+};
+function playSound(a){
+  if (!a) return;
+  try {
+    a.currentTime = 0;
+    const p = a.play();
+    if (p && typeof p.catch === 'function') p.catch(function(){});
+  } catch (e) { /* ignore */ }
 }
-function playRegisterSuccessSound(){
-  // Sound effects removed for the academic submission build.
-}
+function playUploadSound(){ playSound(SOUNDS.upload); }
+function playErrorSound(){ playSound(SOUNDS.error); }
+function playVerifySuccessSound(){ playSound(SOUNDS.verify); }
+function playRegisterSuccessSound(){ playSound(SOUNDS.register); }
 
 let selectedFile = null;
 
@@ -753,6 +768,7 @@ uploadBtn.addEventListener('click', async () => {
   uploadBtn.disabled = true;
   uploadBtn.textContent = 'Uploading…';
   uploadStatus.classList.remove('show');
+  playUploadSound();
 
   const formData = new FormData();
   formData.append('file', selectedFile);

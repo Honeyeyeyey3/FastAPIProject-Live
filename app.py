@@ -51,6 +51,48 @@ MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 MOBILE_RE = re.compile(r"^[0-9]{7,15}$")
 
 
+# ---------------------------------------------------------------------------
+# Admin access
+# On the live server, set an ADMIN_KEY environment variable (Render -> Environment).
+# For testing on your own computer you can instead put the key in admin_key.txt.
+# If neither exists, the admin panel simply stays switched off — nothing breaks.
+# ---------------------------------------------------------------------------
+_INVISIBLE_CHARS = "\ufeff\u200b\u200c\u200d\u2060\u00a0"
+
+
+def clean_key(value):
+    """Make a key safe to compare: drop invisible characters, spaces and wrapping quotes.
+    The same cleaning is applied to the saved key and to the key typed in the browser,
+    so a stray space, a pasted quote mark or a hidden character can no longer cause a rejection."""
+    if value is None:
+        return ""
+    for ch in _INVISIBLE_CHARS:
+        value = value.replace(ch, "")
+    return value.strip().strip("\"'").strip()
+
+
+def load_admin_key():
+    env_key = clean_key(os.getenv("ADMIN_KEY"))
+    if env_key:
+        return env_key, "the ADMIN_KEY environment variable"
+    key_file = os.path.join(BASE_DIR, "admin_key.txt")
+    if os.path.exists(key_file):
+        # utf-8-sig removes the hidden marker Windows Notepad can add at the start of a file
+        with open(key_file, "r", encoding="utf-8-sig") as f:
+            for line in f:
+                line = clean_key(line)
+                if line and not line.startswith("#"):
+                    return line, "admin_key.txt"
+    return "", None
+
+
+ADMIN_KEY, ADMIN_KEY_SOURCE = load_admin_key()
+if ADMIN_KEY:
+    logger.info("Admin panel ENABLED (key read from %s, %d characters)", ADMIN_KEY_SOURCE, len(ADMIN_KEY))
+else:
+    logger.warning("Admin panel is OFF: no ADMIN_KEY environment variable and no admin_key.txt found")
+
+
 def block_dict(r: FileRecord) -> dict:
     return {
         "id": r.id,
@@ -193,6 +235,23 @@ def require_login(user=Depends(get_current_user_dep)):
     return user
 
 
+def admin_key_matches(supplied):
+    wanted = ADMIN_KEY.encode("utf-8")
+    given = clean_key(supplied).encode("utf-8")
+    return len(wanted) > 0 and secrets.compare_digest(given, wanted)
+
+
+def require_admin(x_admin_key: str = Header(default=None)):
+    if not ADMIN_KEY:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin panel is not set up on this server yet. Add an ADMIN_KEY environment variable and redeploy.",
+        )
+    if not admin_key_matches(x_admin_key):
+        raise HTTPException(status_code=401, detail="Wrong admin key")
+    return True
+
+
 # ---------------------------------------------------------------------------
 # Request bodies
 # ---------------------------------------------------------------------------
@@ -312,6 +371,108 @@ def reset_account(payload: ResetPayload, user=Depends(require_login)):
 
     rebuild_ledger_from_db()
     return {"status": "reset", "message": "Your files are cleared. Your mobile number and password still work the same."}
+
+
+# ---------------------------------------------------------------------------
+# Admin endpoints — view, reset or delete accounts and files (key required)
+# ---------------------------------------------------------------------------
+@app.get("/admin/status")
+def admin_status():
+    """Tells the admin page whether a key has been configured. Never reveals the key itself."""
+    return {"configured": bool(ADMIN_KEY)}
+
+
+@app.get("/admin/users")
+def admin_list_users(_=Depends(require_admin)):
+    db = SessionLocal()
+    try:
+        users = db.query(User).order_by(User.id.asc()).all()
+        result = []
+        for u in users:
+            count = db.query(FileRecord).filter(FileRecord.owner_id == u.id).count()
+            result.append({
+                "id": u.id,
+                "mobile": u.mobile,
+                "created_at": u.created_at.isoformat() if u.created_at else None,
+                "file_count": count,
+            })
+        return {
+            "users": result,
+            "total_files": db.query(FileRecord).count(),
+            "guest_files": db.query(FileRecord).filter(FileRecord.owner_id.is_(None)).count(),
+        }
+    finally:
+        db.close()
+
+
+@app.get("/admin/files")
+def admin_list_files(_=Depends(require_admin)):
+    db = SessionLocal()
+    try:
+        owners = {u.id: u.mobile for u in db.query(User).all()}
+        rows = db.query(FileRecord).order_by(FileRecord.id.desc()).all()
+        files = []
+        for r in rows:
+            item = block_dict(r)
+            item["owner"] = owners.get(r.owner_id, "guest")
+            files.append(item)
+        return {"files": files}
+    finally:
+        db.close()
+
+
+@app.delete("/admin/files/{file_id}")
+def admin_delete_file(file_id: int, _=Depends(require_admin)):
+    db = SessionLocal()
+    try:
+        record = db.query(FileRecord).filter(FileRecord.id == file_id).first()
+        if not record:
+            raise HTTPException(status_code=404, detail="File not found")
+        delete_stored_bytes_if_orphaned(db, record.filehash, record.id)
+        db.delete(record)
+        db.commit()
+    finally:
+        db.close()
+    rebuild_ledger_from_db()
+    return {"status": "deleted"}
+
+
+@app.delete("/admin/users/{user_id}")
+def admin_delete_user(user_id: int, _=Depends(require_admin)):
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        files = db.query(FileRecord).filter(FileRecord.owner_id == user_id).all()
+        for f in files:
+            delete_stored_bytes_if_orphaned(db, f.filehash, f.id)
+            db.delete(f)
+        db.query(UserSession).filter(UserSession.user_id == user_id).delete()
+        db.delete(user)
+        db.commit()
+    finally:
+        db.close()
+    rebuild_ledger_from_db()
+    return {"status": "deleted"}
+
+
+@app.post("/admin/users/{user_id}/reset")
+def admin_reset_user(user_id: int, _=Depends(require_admin)):
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        files = db.query(FileRecord).filter(FileRecord.owner_id == user_id).all()
+        for f in files:
+            delete_stored_bytes_if_orphaned(db, f.filehash, f.id)
+            db.delete(f)
+        db.commit()
+    finally:
+        db.close()
+    rebuild_ledger_from_db()
+    return {"status": "reset"}
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureShare | Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B1220;
+    --surface: #101A2E;
+    --surface-2: #17233D;
+    --border: #263353;
+    --text: #E8EDF5;
+    --text-dim: #8C9BC2;
+    --accent: #4FD1C5;
+    --accent-soft: rgba(79,209,197,0.12);
+    --danger: #F2545B;
+    --danger-soft: rgba(242,84,91,0.12);
+    --warn: #F0B429;
+    --warn-soft: rgba(240,180,41,0.12);
+    --radius: 10px;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    padding: 28px 18px 70px;
+  }
+  .wrap{ max-width: 940px; margin: 0 auto; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom: 28px; flex-wrap: wrap; }
+  .brand{ display:flex; align-items:center; gap:10px; font-family: var(--font-display); font-weight:700; font-size:18px; }
+  .brand .mark{
+    width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(145deg, var(--accent), #2E9C93); color:#06141A; font-size:13px;
+  }
+  .brand .dim{ color: var(--text-dim); font-weight:500; }
+  a.back{ color: var(--accent); text-decoration:none; font-size:13.5px; }
+  a.back:hover{ text-decoration: underline; }
+  h1{ font-family: var(--font-display); font-size: 24px; margin: 0 0 6px; }
+  h2{ font-family: var(--font-display); font-size: 18px; margin: 0 0 14px; }
+  .sub{ color: var(--text-dim); font-size: 13.5px; margin: 0 0 20px; }
+  .panel{
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px; margin-bottom: 22px;
+  }
+  label{ display:block; font-size:12.5px; color: var(--text-dim); margin-bottom:8px; font-family: var(--font-mono); }
+  label.check{ display:flex; align-items:center; gap:8px; margin: 10px 0 0; font-family: var(--font-body); cursor:pointer; }
+  input[type="password"], input[type="text"]{
+    width:100%; background: var(--surface-2); border:1px solid var(--border); color: var(--text);
+    font-family: var(--font-mono); font-size:13px; padding:11px 12px; border-radius:8px; outline:none;
+  }
+  input:focus{ border-color: var(--accent); }
+  button{
+    font-family: var(--font-body); font-weight:600; font-size:13.5px; border-radius:8px;
+    border:none; padding:10px 16px; cursor:pointer;
+  }
+  button:disabled{ opacity:.55; cursor:not-allowed; }
+  .btn-primary{ background: var(--accent); color:#06141A; }
+  .btn-danger{ background: var(--danger-soft); color: var(--danger); border:1px solid rgba(242,84,91,0.35); padding:7px 12px; font-size:12.5px; }
+  .btn-ghost{ background: transparent; color: var(--text); border:1px solid var(--border); }
+  .btn-small{ padding:7px 12px; font-size:12.5px; }
+  .row{ display:flex; gap:8px; margin-top:14px; flex-wrap: wrap; }
+  .head-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
+  .stats{ display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; margin-bottom:22px; }
+  @media (max-width: 560px){ .stats{ grid-template-columns: 1fr; } }
+  .stat{ background: var(--surface); border:1px solid var(--border); border-radius: var(--radius); padding:16px 18px; }
+  .stat .num{ font-family: var(--font-display); font-size:28px; font-weight:700; color: var(--accent); }
+  .stat .lbl{ font-size:12.5px; color: var(--text-dim); }
+  .table-scroll{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; min-width: 520px; }
+  th, td{ text-align:left; padding:10px 8px; border-bottom:1px solid var(--border); vertical-align: middle; }
+  th{ color: var(--text-dim); font-weight:600; font-family: var(--font-mono); font-size:11.5px; text-transform:uppercase; }
+  td.mono{ font-family: var(--font-mono); }
+  .actions{ display:flex; gap:6px; }
+  .status{ font-size:13px; margin-top:12px; display:none; }
+  .status.show{ display:block; }
+  .status.ok{ color: var(--accent); }
+  .status.bad{ color: var(--danger); }
+  .notice{ font-size:13px; padding:12px 14px; border-radius:8px; margin-bottom:16px; display:none; }
+  .notice.show{ display:block; }
+  .notice.warn{ background: var(--warn-soft); border:1px solid rgba(240,180,41,0.4); color: var(--warn); }
+  .empty{ color: var(--text-dim); font-size:13.5px; padding:14px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><span class="mark">S</span>SecureShare <span class="dim">/ admin</span></div>
+    <a class="back" href="/">&larr; Back to the website</a>
+  </div>
+
+  <!-- Sign-in -->
+  <div class="panel" id="lockPanel">
+    <h1>Admin sign-in</h1>
+    <p class="sub">Enter your admin key. On the live site it is the ADMIN_KEY value saved in Render.</p>
+    <div class="notice warn" id="setupNotice"></div>
+    <label for="adminKeyInput">ADMIN KEY</label>
+    <input type="password" id="adminKeyInput" autocomplete="off" spellcheck="false" placeholder="Paste your admin key here">
+    <label class="check"><input type="checkbox" id="showKey"> Show the key while I type</label>
+    <div class="row">
+      <button class="btn-primary" id="unlockBtn">Unlock</button>
+    </div>
+    <div class="status" id="keyStatus"></div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" style="display:none;">
+    <div class="head-row">
+      <h1>Dashboard</h1>
+      <div class="row" style="margin-top:0;">
+        <button class="btn-ghost btn-small" id="refreshBtn">Refresh</button>
+        <button class="btn-ghost btn-small" id="signOutBtn">Sign out</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="num" id="statUsers">0</div><div class="lbl">Registered accounts</div></div>
+      <div class="stat"><div class="num" id="statFiles">0</div><div class="lbl">Files stored</div></div>
+      <div class="stat"><div class="num" id="statGuest">0</div><div class="lbl">Guest uploads (no account)</div></div>
+    </div>
+
+    <div class="status" id="actionStatus"></div>
+
+    <div class="panel">
+      <h2>Accounts</h2>
+      <p class="sub" style="margin-bottom:10px;">Reset clears an account's files but keeps the login. Delete removes the account and all its files.</p>
+      <div id="usersWrap"></div>
+    </div>
+
+    <div class="panel">
+      <h2>All files</h2>
+      <p class="sub" style="margin-bottom:10px;">Every uploaded file, including guest uploads. Delete removes a single file.</p>
+      <div id="filesWrap"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY_STORE = 'secureshare_admin_key';
+let adminKey = sessionStorage.getItem(KEY_STORE) || '';
+
+function $(id){ return document.getElementById(id); }
+
+// Remove hidden characters, spaces and wrapping quotes so a pasted key still matches
+function cleanKey(v){
+  return (v || '').replace(/[\uFEFF\u200B\u200C\u200D\u2060\u00A0]/g, '').trim().replace(/^["']+|["']+$/g, '').trim();
+}
+
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = (s === null || s === undefined) ? '' : String(s);
+  return d.innerHTML;
+}
+
+function fmtBytes(n){
+  if (!n) return '0 B';
+  const units = ['B','KB','MB','GB'];
+  const i = Math.min(Math.floor(Math.log(n) / Math.log(1024)), units.length - 1);
+  return (n / Math.pow(1024, i)).toFixed(i ? 1 : 0) + ' ' + units[i];
+}
+
+function fmtDate(iso){
+  if (!iso) return '';
+  const hasZone = /[zZ]$|[+-]\d\d:?\d\d$/.test(iso);
+  const d = new Date(hasZone ? iso : iso + 'Z');
+  return isNaN(d.getTime()) ? '' : d.toLocaleString();
+}
+
+function setStatus(el, msg, ok){
+  el.textContent = msg;
+  el.className = 'status show ' + (ok ? 'ok' : 'bad');
+}
+function clearStatus(el){
+  el.textContent = '';
+  el.className = 'status';
+}
+
+async function api(path, options){
+  options = options || {};
+  const headers = Object.assign({ 'X-Admin-Key': adminKey }, options.headers || {});
+  const res = await fetch(path, Object.assign({}, options, { headers: headers }));
+  let data = null;
+  try { data = await res.json(); } catch (e) { data = null; }
+  return { res: res, data: data };
+}
+
+function explain(res, data){
+  if (res.status === 401) return 'Wrong admin key. Copy it again from Render (your service, then Environment, then ADMIN_KEY) and paste it here.';
+  if (res.status === 403) return (data && data.detail) || 'The admin panel is not set up on this server yet.';
+  return (data && data.detail) || ('Server problem (code ' + res.status + '). Please try again in a moment.');
+}
+
+function showLock(){
+  $('dashboard').style.display = 'none';
+  $('lockPanel').style.display = 'block';
+}
+function showDashboard(){
+  $('lockPanel').style.display = 'none';
+  $('dashboard').style.display = 'block';
+}
+
+function signOut(message){
+  adminKey = '';
+  sessionStorage.removeItem(KEY_STORE);
+  $('adminKeyInput').value = '';
+  showLock();
+  if (message) setStatus($('keyStatus'), message, false); else clearStatus($('keyStatus'));
+}
+
+// Is an admin key set up on the server? (never reveals the key)
+async function checkConfigured(){
+  const notice = $('setupNotice');
+  notice.className = 'notice warn';
+  try {
+    const res = await fetch('/admin/status');
+    if (!res.ok){
+      notice.textContent = 'This server does not have the admin code yet. Make sure the new app.py is uploaded to GitHub and Render has finished redeploying, then refresh this page.';
+      notice.className = 'notice warn show';
+      return false;
+    }
+    const data = await res.json();
+    if (!data.configured){
+      notice.textContent = 'The admin panel is switched off because no key is set on this server. In Render open your service, go to Environment, add a variable named ADMIN_KEY with your secret key, and save. Render redeploys by itself (about 2 minutes). Then refresh this page.';
+      notice.className = 'notice warn show';
+      return false;
+    }
+    return true;
+  } catch (e) {
+    return null; // could not reach the server (maybe still waking up)
+  }
+}
+
+function renderUsers(data){
+  const users = data.users || [];
+  $('statUsers').textContent = users.length;
+  $('statFiles').textContent = data.total_files || 0;
+  $('statGuest').textContent = data.guest_files || 0;
+  const wrap = $('usersWrap');
+  if (!users.length){
+    wrap.innerHTML = '<div class="empty">No accounts have registered yet.</div>';
+    return;
+  }
+  const rows = users.map(function(u){
+    return '<tr>' +
+      '<td class="mono">' + esc(u.mobile) + '</td>' +
+      '<td>' + esc(u.file_count) + '</td>' +
+      '<td>' + esc(fmtDate(u.created_at)) + '</td>' +
+      '<td><div class="actions">' +
+        '<button class="btn-ghost btn-small" data-reset="' + esc(u.id) + '">Reset</button>' +
+        '<button class="btn-danger" data-delete-user="' + esc(u.id) + '">Delete</button>' +
+      '</div></td>' +
+    '</tr>';
+  }).join('');
+  wrap.innerHTML = '<div class="table-scroll"><table><thead><tr><th>Mobile</th><th>Files</th><th>Joined</th><th>Actions</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  wrap.querySelectorAll('[data-reset]').forEach(function(b){
+    b.addEventListener('click', function(){
+      doAction('/admin/users/' + b.getAttribute('data-reset') + '/reset', 'POST',
+        'Clear every file this account has uploaded? The login itself stays.', 'Account reset.');
+    });
+  });
+  wrap.querySelectorAll('[data-delete-user]').forEach(function(b){
+    b.addEventListener('click', function(){
+      doAction('/admin/users/' + b.getAttribute('data-delete-user'), 'DELETE',
+        'Permanently delete this account and all of its files? This cannot be undone.', 'Account deleted.');
+    });
+  });
+}
+
+function renderFiles(files){
+  const wrap = $('filesWrap');
+  if (!files.length){
+    wrap.innerHTML = '<div class="empty">No files have been uploaded yet.</div>';
+    return;
+  }
+  const rows = files.map(function(f){
+    return '<tr>' +
+      '<td>' + esc(f.filename) + '</td>' +
+      '<td class="mono">' + esc((f.hash || '').slice(0, 12)) + '&hellip;</td>' +
+      '<td>' + esc(fmtBytes(f.filesize)) + '</td>' +
+      '<td class="mono">' + esc(f.owner) + '</td>' +
+      '<td>' + esc(fmtDate(f.timestamp)) + '</td>' +
+      '<td><button class="btn-danger" data-delete-file="' + esc(f.id) + '">Delete</button></td>' +
+    '</tr>';
+  }).join('');
+  wrap.innerHTML = '<div class="table-scroll"><table><thead><tr><th>File</th><th>Hash</th><th>Size</th><th>Owner</th><th>Uploaded</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  wrap.querySelectorAll('[data-delete-file]').forEach(function(b){
+    b.addEventListener('click', function(){
+      doAction('/admin/files/' + b.getAttribute('data-delete-file'), 'DELETE',
+        'Permanently delete this file? This cannot be undone.', 'File deleted.');
+    });
+  });
+}
+
+async function loadFiles(){
+  const r = await api('/admin/files');
+  if (r.res.ok) renderFiles(r.data.files || []);
+  else if (r.res.status === 401 || r.res.status === 403) signOut(explain(r.res, r.data));
+  else setStatus($('actionStatus'), explain(r.res, r.data), false);
+}
+
+async function refresh(){
+  const u = await api('/admin/users');
+  if (u.res.ok){
+    renderUsers(u.data);
+    await loadFiles();
+  } else if (u.res.status === 401 || u.res.status === 403){
+    signOut(explain(u.res, u.data));
+  } else {
+    setStatus($('actionStatus'), explain(u.res, u.data), false);
+  }
+}
+
+async function doAction(path, method, confirmText, doneText){
+  if (!confirm(confirmText)) return;
+  clearStatus($('actionStatus'));
+  try {
+    const r = await api(path, { method: method });
+    if (!r.res.ok){
+      if (r.res.status === 401 || r.res.status === 403){ signOut(explain(r.res, r.data)); return; }
+      setStatus($('actionStatus'), explain(r.res, r.data), false);
+      return;
+    }
+    setStatus($('actionStatus'), doneText, true);
+    await refresh();
+  } catch (e) {
+    setStatus($('actionStatus'), 'Could not reach the server. Please try again.', false);
+  }
+}
+
+async function unlock(){
+  const typed = cleanKey($('adminKeyInput').value);
+  clearStatus($('keyStatus'));
+  if (!typed){
+    setStatus($('keyStatus'), 'Please enter the admin key first.', false);
+    return;
+  }
+  adminKey = typed;
+  $('unlockBtn').disabled = true;
+  $('unlockBtn').textContent = 'Checking...';
+  try {
+    const r = await api('/admin/users');
+    if (!r.res.ok){
+      adminKey = '';
+      sessionStorage.removeItem(KEY_STORE);
+      setStatus($('keyStatus'), explain(r.res, r.data), false);
+      return;
+    }
+    sessionStorage.setItem(KEY_STORE, adminKey);
+    showDashboard();
+    renderUsers(r.data);
+    await loadFiles();
+  } catch (err) {
+    adminKey = '';
+    const badChar = (err instanceof TypeError) && /ISO-8859-1|header/i.test(String(err.message));
+    setStatus($('keyStatus'), badChar
+      ? 'The key contains a character the browser cannot send. Clear the box and paste the key again.'
+      : 'Could not reach the server. If the site was asleep, wait a minute and try again.', false);
+  } finally {
+    $('unlockBtn').disabled = false;
+    $('unlockBtn').textContent = 'Unlock';
+  }
+}
+
+$('unlockBtn').addEventListener('click', unlock);
+$('adminKeyInput').addEventListener('keydown', function(e){ if (e.key === 'Enter') unlock(); });
+$('showKey').addEventListener('change', function(){
+  $('adminKeyInput').type = $('showKey').checked ? 'text' : 'password';
+});
+$('refreshBtn').addEventListener('click', refresh);
+$('signOutBtn').addEventListener('click', function(){ signOut(''); });
+
+(async function init(){
+  setStatus($('keyStatus'), 'Contacting the server... (if the site was asleep this can take about a minute)', true);
+  const configured = await checkConfigured();
+  clearStatus($('keyStatus'));
+  if (configured === null){
+    setStatus($('keyStatus'), 'Could not reach the server yet. Wait a moment and refresh this page.', false);
+  }
+  if (adminKey && configured){
+    try {
+      const r = await api('/admin/users');
+      if (r.res.ok){
+        showDashboard();
+        renderUsers(r.data);
+        await loadFiles();
+        return;
+      }
+    } catch (e) { /* fall through to the sign-in box */ }
+    adminKey = '';
+    sessionStorage.removeItem(KEY_STORE);
+  }
+  showLock();
+})();
+</script>
+</body>
+</html>
